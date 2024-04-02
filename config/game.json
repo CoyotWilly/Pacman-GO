@@ -1,0 +1,13 @@
+{
+  "pacman": "👶",
+  "ghost": "🥗",
+  "eatableGhost": "🍪",
+  "wall": "  ",
+  "point": "▫️ ",
+  "fruit": "🍼",
+  "death": "😵",
+  "space": "  ",
+  "imgSize": 40,
+  "useEmoji": true,
+  "fruitDuration": 15000
+}
