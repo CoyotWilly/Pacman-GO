@@ -1,6 +1,6 @@
 {
   "name": "Pacman",
   "width": 820,
-  "height": 640,
-  "circle": 15
+  "height": 0,
+  "charSize": 25
 }
