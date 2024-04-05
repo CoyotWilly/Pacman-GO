@@ -7,10 +7,11 @@ import (
 )
 
 type WindowConfig struct {
-	Name     string `json:"name"`
-	Width    int    `json:"width"`
-	Height   int    `json:"height"`
-	CharSize int    `json:"charSize"`
+	Name        string  `json:"name"`
+	Width       int     `json:"width"`
+	Height      int     `json:"height"`
+	ScaleFactor float64 `json:"scaleFactor"`
+	CharSize    int     `json:"charSize"`
 }
 
 func LoadWindowConfiguration(filePath string, configuration *WindowConfig) error {

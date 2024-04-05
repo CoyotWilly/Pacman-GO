@@ -4,7 +4,7 @@ import (
 	"Pacman/src"
 	"Pacman/src/config"
 	"Pacman/src/factory"
-	"Pacman/src/model"
+	model "Pacman/src/model"
 	"flag"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
@@ -39,44 +39,38 @@ var (
 type Game struct{}
 
 func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
+		pacman.Y--
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		pacman.Y++
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		pacman.X++
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		pacman.X--
+	}
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.Black)
+
 	for row, line := range maze {
-		for col, character := range line {
-			rect := ebiten.NewImage(windowConfig.CharSize, windowConfig.CharSize)
-			offset := float64(0)
-			scale := false
-
-			switch character {
-			case '#':
-				rect.Fill(color.RGBA{R: 0x00, G: 0x00, B: 0xff, A: 0xff})
-			case '.':
-				rect = imgFactory.Dot
-				scale = true
-				offset = float64(windowConfig.CharSize / 2)
-			case 'X':
-				rect = imgFactory.Fruit
-				scale = true
-				offset = (float64(windowConfig.CharSize) * windowConfig.ScaleFactor) / 2
-			default:
-				continue
-			}
-			options := &ebiten.DrawImageOptions{}
-			if scale {
-				options.GeoM.Scale(windowConfig.ScaleFactor, windowConfig.ScaleFactor)
-			}
-
-			options.GeoM.Translate(float64(col*windowConfig.CharSize)+offset,
-				float64(row*windowConfig.CharSize)+offset)
-			screen.DrawImage(rect, options)
+		for col, char := range line {
+			read := model.MazeCharacter{Row: row, Col: col, Line: line, Char: char}
+			src.DrawMaze(screen, &read, &windowConfig, &imgFactory)
+			model.DrawGhosts(screen, &read, &windowConfig, &imgFactory, &pacman, ghosts, ghostsCount, &dotsCount)
 		}
 	}
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *Game) Layout(_, _ int) (screenWidth, screenHeight int) {
 	if windowConfig.Height == 0 || windowConfig.Width == 0 {
 		return windowConfig.CharSize * mazeDimensions.Width, windowConfig.CharSize * mazeDimensions.Height
 	}
@@ -91,12 +85,12 @@ func main() {
 		return
 	}
 
-	e = src.LoadMaze(*mazeLayoutFile, &maze, &ghosts, &pacman, &dotsCount, ghostsCount, &mazeDimensions)
+	e = src.LoadMaze(*mazeLayoutFile, &maze, &ghosts, &pacman, &dotsCount, ghostsCount, &mazeDimensions, &windowConfig)
 	if e != nil {
 		log.Panicf("[GAME] Maze load failed")
 	}
 
-	e = factory.Create(&imgFactory, gameConfig.ImgSize, gameConfig.ImgSize)
+	e = factory.Create(&imgFactory)
 	if e != nil {
 		log.Panicf("[GAME] Assest load failed")
 	}

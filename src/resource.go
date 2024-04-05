@@ -2,7 +2,6 @@ package src
 
 import (
 	"Pacman/src/config"
-	"Pacman/src/model"
 	"log"
 )
 
@@ -30,21 +29,21 @@ func InitializeConfiguration(
 	return nil
 }
 
-func InitializeGame(
-	mazeFile string,
-	maze *[]string,
-	ghosts *[]*model.Ghost,
-	pacman *model.Sprite,
-	dotsCount *int,
-	ghostsCount int,
-	dimensions *MazeDimensions) error {
-	e := LoadMaze(mazeFile, maze, ghosts, pacman, dotsCount, ghostsCount, dimensions)
-
-	if e != nil {
-		log.Panicf("[RESOURCE] Maze layout load failed. %s", e)
-
-		return e
-	}
-
-	return nil
-}
+//func InitializeGame(
+//	mazeFile string,
+//	maze *[]string,
+//	ghosts *[]*model.Ghost,
+//	pacman *model.Sprite,
+//	dotsCount *int,
+//	ghostsCount int,
+//	dimensions *MazeDimensions) error {
+//	e := LoadMaze(mazeFile, maze, ghosts, pacman, dotsCount, ghostsCount, dimensions)
+//
+//	if e != nil {
+//		log.Panicf("[RESOURCE] Maze layout load failed. %s", e)
+//
+//		return e
+//	}
+//
+//	return nil
+//}
