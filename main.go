@@ -41,18 +41,16 @@ type Game struct{}
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		pacman.Y--
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		pacman.Direction = model.DrawDirection(ebiten.KeyW)
+	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
 		pacman.Y++
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		pacman.Direction = model.DrawDirection(ebiten.KeyS)
+	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
 		pacman.X++
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		pacman.Direction = model.DrawDirection(ebiten.KeyD)
+	} else if ebiten.IsKeyPressed(ebiten.KeyA) {
 		pacman.X--
+		pacman.Direction = model.DrawDirection(ebiten.KeyA)
 	}
 
 	return nil

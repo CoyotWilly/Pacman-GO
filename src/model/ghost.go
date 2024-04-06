@@ -5,7 +5,14 @@ import (
 	"Pacman/src/enum"
 	"Pacman/src/factory"
 	"github.com/hajimehoshi/ebiten/v2"
-	"math/rand"
+	"math"
+)
+
+const (
+	UP    = 0
+	DOWN  = 1
+	RIGHT = 2
+	LEFT  = 3
 )
 
 type Ghost struct {
@@ -49,24 +56,64 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 	}
 
 	if rect == factory.Pacman {
-		options.GeoM.Translate(float64(pacman.X),
-			float64(pacman.Y))
+		switch pacman.Direction {
+		case UP:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == DOWN {
+				pacman.X -= windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == LEFT {
+				pacman.X -= windowConfig.CharSize
+				pacman.Y += windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+				pacman.Y += windowConfig.CharSize
+			}
+			options.GeoM.Rotate(-math.Pi / 2)
+			break
+		case DOWN:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+				pacman.X += windowConfig.CharSize
+				pacman.Y -= windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+				pacman.X += windowConfig.CharSize
+			}
+			options.GeoM.Rotate(math.Pi / 2)
+			break
+		case LEFT:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+				pacman.X += windowConfig.CharSize
+				pacman.Y -= windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+				pacman.X += windowConfig.CharSize
+			}
+			options.GeoM.Rotate(math.Pi)
+			options.GeoM.Scale(1, -1)
+			break
+		case RIGHT:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+				pacman.Y -= windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == DOWN {
+				pacman.X -= windowConfig.CharSize
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == LEFT {
+				pacman.X -= windowConfig.CharSize
+			}
+		}
+
+		options.GeoM.Translate(float64(pacman.X), float64(pacman.Y))
+		pacman.PrevDirection = pacman.Direction
 	} else {
-		options.GeoM.Translate(float64(unit.Col*windowConfig.CharSize),
+		options.GeoM.Translate(float64((unit.Col)*windowConfig.CharSize),
 			float64(unit.Row*windowConfig.CharSize))
 	}
 
 	screen.DrawImage(rect, options)
 }
 
-func drawDirection() string {
-	dir := rand.Intn(4)
-	move := map[int]string{
-		0: "UP",
-		1: "DOWN",
-		2: "RIGHT",
-		3: "LEFT",
+func DrawDirection(towards ebiten.Key) int {
+	move := map[ebiten.Key]int{
+		ebiten.KeyW: 0,
+		ebiten.KeyS: 1,
+		ebiten.KeyD: 2,
+		ebiten.KeyA: 3,
 	}
 
-	return move[dir]
+	return move[towards]
 }
