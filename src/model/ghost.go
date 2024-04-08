@@ -8,13 +8,6 @@ import (
 	"math"
 )
 
-const (
-	UP    = 0
-	DOWN  = 1
-	RIGHT = 2
-	LEFT  = 3
-)
-
 type Ghost struct {
 	Position Sprite
 	Shape    ebiten.Image
@@ -57,42 +50,41 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 
 	if rect == factory.Pacman {
 		switch pacman.Direction {
-		case UP:
-			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == DOWN {
+		case enum.UP:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.DOWN {
 				pacman.X -= windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == LEFT {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.LEFT {
 				pacman.X -= windowConfig.CharSize
 				pacman.Y += windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.RIGHT {
 				pacman.Y += windowConfig.CharSize
 			}
 			options.GeoM.Rotate(-math.Pi / 2)
-			break
-		case DOWN:
-			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+		case enum.DOWN:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.UP {
 				pacman.X += windowConfig.CharSize
 				pacman.Y -= windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.RIGHT {
 				pacman.X += windowConfig.CharSize
 			}
 			options.GeoM.Rotate(math.Pi / 2)
 			break
-		case LEFT:
-			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+		case enum.LEFT:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.UP {
 				pacman.X += windowConfig.CharSize
 				pacman.Y -= windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == RIGHT {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.RIGHT {
 				pacman.X += windowConfig.CharSize
 			}
 			options.GeoM.Rotate(math.Pi)
 			options.GeoM.Scale(1, -1)
 			break
-		case RIGHT:
-			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == UP {
+		case enum.RIGHT:
+			if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.UP {
 				pacman.Y -= windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == DOWN {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.DOWN {
 				pacman.X -= windowConfig.CharSize
-			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == LEFT {
+			} else if pacman.Direction != pacman.PrevDirection && pacman.PrevDirection == enum.LEFT {
 				pacman.X -= windowConfig.CharSize
 			}
 		}
@@ -116,4 +108,8 @@ func DrawDirection(towards ebiten.Key) int {
 	}
 
 	return move[towards]
+}
+
+func CheckMovePossibility() {
+
 }
