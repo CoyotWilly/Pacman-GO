@@ -13,18 +13,12 @@ import (
 )
 
 const (
-	VerticalOffset   = 1
 	HorizontalOffset = 1.5
 )
 
-type MazeDimensions struct {
-	Width  int
-	Height int
-}
-
 func LoadMaze(
 	filePath string, maze *[]string, ghosts *[]*model.Ghost,
-	pacman *model.Sprite, dotsCount *int, ghostsCount int, dim *MazeDimensions, window *config.WindowConfig) error {
+	pacman *model.Sprite, dotsCount *int, ghostsCount int, dim *model.MazeDimensions, window *config.WindowConfig) error {
 	file, e := os.Open(filePath)
 	if e != nil {
 		return e
@@ -49,7 +43,7 @@ func LoadMaze(
 			switch char {
 			case 'P':
 				x := int((float64(row) + HorizontalOffset) * float64(window.CharSize))
-				y := (col - 1) * window.CharSize
+				y := col * window.CharSize
 				*pacman = model.Sprite{X: x, Y: y, XInit: x, YInit: y}
 			case 'G':
 				if len(*ghosts) < ghostsCount {

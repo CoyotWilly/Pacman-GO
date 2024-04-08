@@ -20,7 +20,7 @@ var (
 
 	gameConfig     config.GameConfig
 	windowConfig   config.WindowConfig
-	mazeDimensions src.MazeDimensions
+	mazeDimensions model.MazeDimensions
 
 	imgFactory factory.AssetsFactory
 
@@ -36,21 +36,30 @@ var (
 	fruitTimer *time.Timer
 )
 
-type Game struct{}
+type Game struct {
+	row int
+	col int
+}
 
 func (g *Game) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		pacman.Y--
-		pacman.Direction = model.DrawDirection(ebiten.KeyW)
-	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
-		pacman.Y++
-		pacman.Direction = model.DrawDirection(ebiten.KeyS)
-	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
-		pacman.X++
-		pacman.Direction = model.DrawDirection(ebiten.KeyD)
-	} else if ebiten.IsKeyPressed(ebiten.KeyA) {
-		pacman.X--
-		pacman.Direction = model.DrawDirection(ebiten.KeyA)
+	moves := model.CheckPossibleMoves(pacman, windowConfig, mazeDimensions,
+		model.MazeCharacter{Row: g.row, Col: g.col}, maze)
+	model.ProcessInput(&pacman, moves)
+	maze = model.ProcessPoint(maze, model.MazeCharacter{Row: g.row, Col: g.col}, &score)
+
+	g.row = pacman.Y / windowConfig.CharSize
+	g.col = pacman.X / windowConfig.CharSize
+
+	if g.row > mazeDimensions.Width-1 {
+		g.row = mazeDimensions.Width - 1
+	} else if g.row < 1 {
+		g.row = 0
+	}
+
+	if g.col > mazeDimensions.Height-1 {
+		g.col = mazeDimensions.Height - 1
+	} else if g.col < 1 {
+		g.col = 0
 	}
 
 	return nil
@@ -101,7 +110,10 @@ func main() {
 		ebiten.SetWindowSize(windowConfig.Width, windowConfig.Height)
 	}
 
-	if e := ebiten.RunGame(&Game{}); e != nil {
+	if e := ebiten.RunGame(&Game{
+		row: pacman.X / windowConfig.CharSize,
+		col: pacman.Y / windowConfig.CharSize,
+	}); e != nil {
 		log.Fatalf("[GAME] Startup failed. %s", e)
 	}
 }
