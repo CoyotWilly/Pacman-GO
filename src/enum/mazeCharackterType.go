@@ -6,5 +6,6 @@ const (
 	GHOST  = 'G'
 	FRUIT  = 'X'
 	POINT  = '.'
+	EMPTY  = ' '
 	DOOR   = '-'
 )

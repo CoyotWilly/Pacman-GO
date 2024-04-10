@@ -3,6 +3,6 @@ package enum
 type GhostsStatus string
 
 const (
-	Normal GhostsStatus = "Normal"
-	Blue   GhostsStatus = "Blue"
+	Normal   GhostsStatus = "Normal"
+	Infected GhostsStatus = "Infected"
 )
