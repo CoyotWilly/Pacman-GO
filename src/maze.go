@@ -17,8 +17,8 @@ const (
 )
 
 func LoadMaze(
-	filePath string, maze *[]string, ghosts *[]*model.Ghost,
-	pacman *model.Sprite, dotsCount *int, ghostsCount int, dim *model.MazeDimensions, window *config.WindowConfig) error {
+	filePath string, maze *[]string, ghosts *[]*model.Ghost, pacman *model.Sprite, ghostsCount int,
+	factory *factory.AssetsFactory, dotsCount *int, dim *model.MazeDimensions, window *config.WindowConfig) error {
 	file, e := os.Open(filePath)
 	if e != nil {
 		return e
@@ -36,31 +36,32 @@ func LoadMaze(
 		line := scanner.Text()
 		*maze = append(*maze, line)
 	}
-
+	ghostsImg := []*ebiten.Image{factory.Pinky, factory.Blinky, factory.Inky, factory.Clyde}
 	for row, line := range *maze {
 		for col, char := range line {
-			dim.Width = col
+			dim.WidthLines = col
 			switch char {
-			case 'P':
+			case enum.PACMAN:
 				x := int((float64(row) + HorizontalOffset) * float64(window.CharSize))
 				y := col * window.CharSize
 				*pacman = model.Sprite{X: x, Y: y, XInit: x, YInit: y}
-			case 'G':
+			case enum.GHOST:
 				if len(*ghosts) < ghostsCount {
 					*ghosts = append(*ghosts,
 						&model.Ghost{
 							Position: model.Sprite{X: row, Y: col, XInit: row, YInit: col},
+							Shape:    ghostsImg[col%ghostsCount],
 							Status:   enum.Normal,
 						})
 				}
-			case '.':
+			case enum.POINT:
 				*dotsCount++
 			}
-			dim.Height = row
+			dim.HeightLines = row
 		}
 	}
-	dim.Width++
-	dim.Height++
+	dim.WidthLines++
+	dim.HeightLines++
 
 	return nil
 }
@@ -69,16 +70,16 @@ func DrawMaze(screen *ebiten.Image, unit *model.MazeCharacter,
 	windowConfig *config.WindowConfig, factory *factory.AssetsFactory) {
 	rect := ebiten.NewImage(windowConfig.CharSize, windowConfig.CharSize)
 	options := &ebiten.DrawImageOptions{}
-	offset := float64(0)
+	offset := 0.0
 
 	switch unit.Char {
-	case '#':
+	case enum.WALL:
 		rect.Fill(color.RGBA{R: 0x00, G: 0x00, B: 0xff, A: 0xff})
-	case '.':
+	case enum.POINT:
 		rect = factory.Dot
 		options.GeoM.Scale(windowConfig.ScaleFactor, windowConfig.ScaleFactor)
 		offset = float64(windowConfig.CharSize / 2)
-	case 'X':
+	case enum.FRUIT:
 		rect = factory.Fruit
 		options.GeoM.Scale(windowConfig.ScaleFactor, windowConfig.ScaleFactor)
 		offset = (float64(windowConfig.CharSize) * windowConfig.ScaleFactor) / 2
