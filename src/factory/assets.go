@@ -12,14 +12,15 @@ import (
 const path = "./assets/"
 
 type AssetsFactory struct {
-	Pacman *ebiten.Image
-	Fruit  *ebiten.Image
-	Dot    *ebiten.Image
-	Blinky *ebiten.Image
-	Pinky  *ebiten.Image
-	Inky   *ebiten.Image
-	Clyde  *ebiten.Image
-	Icon   image.Image
+	Pacman   *ebiten.Image
+	Fruit    *ebiten.Image
+	Dot      *ebiten.Image
+	Blinky   *ebiten.Image
+	Pinky    *ebiten.Image
+	Inky     *ebiten.Image
+	Clyde    *ebiten.Image
+	Infected *ebiten.Image
+	Icon     image.Image
 }
 
 func Create(consumer *AssetsFactory) error {
@@ -57,6 +58,8 @@ func Create(consumer *AssetsFactory) error {
 			consumer.Fruit = img
 		case "dot":
 			consumer.Dot = img
+		case "infected":
+			consumer.Infected = img
 		default:
 			log.Printf("[FACTORY] Unknown field: %s.", strings.Split(file.Name(), "."))
 		}
