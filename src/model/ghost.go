@@ -7,34 +7,32 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"math"
+	"slices"
 	"sync"
 	"time"
 )
 
 type Ghost struct {
-	Position Sprite
-	Shape    *ebiten.Image
-	Status   enum.GhostsStatus
+	PositionLines  Sprite
+	PositionPixels Sprite
+	Shape          *ebiten.Image
+	Status         enum.GhostsStatus
+	Movement       Movement
 }
 
 var (
 	ghostUpdateMtx sync.RWMutex
 )
 
-func UpdateGhosts(ghosts *[]*Ghost, unit MazeCharacter, maze *[]string, fruitTimer *time.Timer, fruitMtx *sync.Mutex,
-	factory factory.AssetsFactory, gameConfig config.GameConfig) {
-	if unit.Char == 'X' {
-		go changeStatus(ghosts, []*ebiten.Image{factory.Infected}, &ghostUpdateMtx)
-		*maze = ConsumeFruit(unit, *maze)
-
-		log.Printf("Countdown start: %s", time.Now().String())
-		fruitMtx.Lock()
-		defer fruitMtx.Unlock()
-		fruitTimer = time.NewTimer(gameConfig.FruitDuration * time.Millisecond)
-		<-fruitTimer.C
-		changeStatus(ghosts, []*ebiten.Image{factory.Pinky, factory.Blinky, factory.Inky, factory.Clyde}, &ghostUpdateMtx)
-		log.Printf("Countdown stop: %s", time.Now().String())
+func DrawDirection(towards ebiten.Key) int {
+	move := map[ebiten.Key]int{
+		ebiten.KeyW: 0,
+		ebiten.KeyS: 1,
+		ebiten.KeyD: 2,
+		ebiten.KeyA: 3,
 	}
+
+	return move[towards]
 }
 
 func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.WindowConfig,
@@ -48,9 +46,10 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
 		break
 	case enum.GHOST:
-		ghosts[unit.Col%ghostsCount].Position = Sprite{X: unit.Row, Y: unit.Col, XInit: unit.Row, YInit: unit.Col}
 		rect = ghosts[unit.Col%ghostsCount].Shape
 		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
+		options.GeoM.Translate(float64(ghosts[unit.Col%ghostsCount].PositionPixels.X),
+			float64(ghosts[unit.Col%ghostsCount].PositionPixels.Y))
 		break
 	case enum.POINT:
 		*dotsCount++
@@ -103,23 +102,41 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 
 		options.GeoM.Translate(float64(pacman.X), float64(pacman.Y))
 		pacman.PrevDirection = pacman.Direction
-	} else {
-		options.GeoM.Translate(float64((unit.Col)*windowConfig.CharSize),
-			float64(unit.Row*windowConfig.CharSize))
 	}
 
 	screen.DrawImage(rect, options)
 }
 
-func DrawDirection(towards ebiten.Key) int {
-	move := map[ebiten.Key]int{
-		ebiten.KeyW: 0,
-		ebiten.KeyS: 1,
-		ebiten.KeyD: 2,
-		ebiten.KeyA: 3,
-	}
+func UpdateGhosts(ghosts *[]*Ghost, unit MazeCharacter, maze *[]string, fruitTimer *time.Timer, fruitMtx *sync.Mutex,
+	factory factory.AssetsFactory, gameConfig config.GameConfig) {
+	if unit.Char == enum.FRUIT {
+		go changeStatus(ghosts, []*ebiten.Image{factory.Infected}, &ghostUpdateMtx)
+		*maze = ConsumeFruit(unit, *maze)
 
-	return move[towards]
+		fruitMtx.Lock()
+		defer fruitMtx.Unlock()
+		fruitTimer = time.NewTimer(gameConfig.FruitDuration * time.Millisecond)
+		<-fruitTimer.C
+		changeStatus(ghosts, []*ebiten.Image{factory.Pinky, factory.Blinky, factory.Inky, factory.Clyde}, &ghostUpdateMtx)
+	}
+}
+
+func MoveGhosts(ghosts *[]*Ghost, maze []string, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
+	var updated []*Ghost
+	for _, ghost := range *ghosts {
+		if ghost.Movement.DirectionLock < windowConfig.CharSize && ghost.Movement.Direction != enum.UNDEFINED {
+			go headTowardsGivenPoint(MazeCharacter{Row: 6, Col: 14}, ghost,
+				[]int{ghost.Movement.Direction}, windowConfig, mazeDim)
+		} else {
+			ghost.Movement.DirectionLock = 0
+			log.Printf("Lock: %d, Direction: %d", ghost.Movement.DirectionLock, ghost.Movement.Direction)
+			moves := CheckPossibleMoves(MazeCharacter{Row: ghost.PositionLines.Y, Col: ghost.PositionLines.X}, maze)
+			go headTowardsGivenPoint(MazeCharacter{Row: 6, Col: 14}, ghost, moves, windowConfig, mazeDim)
+		}
+
+		updated = append(updated, ghost)
+	}
+	ghosts = &updated
 }
 
 func changeStatus(ghosts *[]*Ghost, assets []*ebiten.Image, mtx *sync.RWMutex) {
@@ -136,4 +153,54 @@ func changeStatus(ghosts *[]*Ghost, assets []*ebiten.Image, mtx *sync.RWMutex) {
 		ghost.Shape = assets[i]
 		ghost.Status = enum.Normal
 	}
+}
+
+func headTowardsGivenPoint(point MazeCharacter, ghost *Ghost, moves []int,
+	conf config.WindowConfig, mazeDim MazeDimensions) {
+	moveX := false
+	if ghost.PositionLines.X > point.Row && slices.Contains(moves, enum.UP) {
+		pixelMove(ghost, conf.CharSize*point.Row, enum.UP)
+		moveX = true
+	} else if ghost.PositionLines.X < point.Row && slices.Contains(moves, enum.DOWN) {
+		pixelMove(ghost, conf.CharSize*point.Row, enum.DOWN)
+		moveX = true
+	}
+	ghost.PositionLines.X = int(math.Round(float64(ghost.PositionPixels.X) / float64(conf.CharSize)))
+
+	if moveX {
+		ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
+
+		return
+	}
+
+	if slices.Contains(moves, enum.LEFT) && ghost.PositionPixels.Y > conf.CharSize &&
+		ghost.PositionLines.Y > point.Col {
+		pixelMove(ghost, conf.CharSize*point.Col, enum.LEFT)
+	} else if slices.Contains(moves, enum.RIGHT) && ghost.PositionPixels.Y < mazeDim.HeightPixels &&
+		ghost.PositionLines.Y < point.Col {
+		pixelMove(ghost, conf.CharSize*point.Col, enum.RIGHT)
+	}
+	ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
+}
+
+func pixelMove(ghost *Ghost, position int, direction int) {
+	ghost.Movement.DirectionMtx.Lock()
+	defer ghost.Movement.DirectionMtx.Unlock()
+
+	if ghost.PositionPixels.X != position && direction > 1 {
+		if direction == enum.RIGHT {
+			ghost.PositionPixels.X++
+		} else {
+			ghost.PositionPixels.X--
+		}
+	} else if ghost.PositionPixels.Y != position && direction < 2 {
+		if direction == enum.DOWN {
+			ghost.PositionPixels.Y++
+		} else {
+			ghost.PositionPixels.Y--
+		}
+	}
+
+	ghost.Movement.Direction = direction
+	ghost.Movement.DirectionLock++
 }
