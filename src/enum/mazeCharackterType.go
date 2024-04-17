@@ -2,10 +2,14 @@ package enum
 
 const (
 	WALL   = '#'
-	PACMAN = 'P'
-	GHOST  = 'G'
+	PACMAN = 'M'
+	GHOST  = 'g'
+	BLINKY = 'B'
+	INKY   = 'I'
+	PINKY  = 'P'
+	CLYDE  = 'C'
 	FRUIT  = 'X'
 	POINT  = '.'
 	EMPTY  = ' '
-	DOOR   = '-'
+	PATH   = '*'
 )

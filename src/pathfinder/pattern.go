@@ -17,6 +17,7 @@ const (
 	KindMountain
 	// KindBlocker (X) is a tile which blocks movement.
 	KindBlocker
+	KindPlayer
 	// KindFrom (F) is a tile which marks where the path should be calculated
 	// from.
 	KindFrom
@@ -40,6 +41,7 @@ var KindRunes = map[int]rune{
 	KindRiver:    '.',
 	KindMountain: 'X',
 	KindBlocker:  '#',
+	KindPlayer:   'M',
 	KindFrom:     'g',
 	KindFrom1:    'p',
 	KindFrom2:    'i',
@@ -50,7 +52,7 @@ var KindRunes = map[int]rune{
 	KindTo2:      'I',
 	KindTo3:      'B',
 	KindTo4:      'C',
-	KindPath:     '●',
+	KindPath:     '*',
 }
 
 var ghostName2Rune = map[enum.GhostsName]rune{
@@ -67,6 +69,7 @@ var RuneKinds = map[rune]int{
 	'.': KindRiver,
 	'X': KindMountain,
 	'#': KindBlocker,
+	'M': KindPlayer,
 	'p': KindFrom,
 	'i': KindFrom,
 	'b': KindFrom,
@@ -81,6 +84,7 @@ var RuneKinds = map[rune]int{
 
 // KindCosts map tile kinds to movement costs.
 var KindCosts = map[int]float64{
+	KindPlayer:   1.0,
 	KindPlain:    1.0,
 	KindFrom:     1.0,
 	KindTo:       1.0,

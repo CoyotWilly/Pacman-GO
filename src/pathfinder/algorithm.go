@@ -1,6 +1,10 @@
 package pathfinder
 
-import "container/heap"
+import (
+	"Pacman/src/enum"
+	"container/heap"
+	"strings"
+)
 
 // astar is an A* pathfinding implementation.
 
@@ -92,4 +96,19 @@ func Path(from, to Pattern) (path []Pattern, distance float64, found bool) {
 			}
 		}
 	}
+}
+
+func EstimateDistance(maze string) int {
+	rows := strings.Split(strings.ReplaceAll(maze, "\r\n", "\n"), "\n")
+	distance := 0
+
+	for _, row := range rows {
+		for _, col := range row {
+			if col == enum.PATH {
+				distance++
+			}
+		}
+	}
+
+	return distance
 }
