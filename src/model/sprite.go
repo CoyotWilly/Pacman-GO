@@ -1,5 +1,7 @@
 package model
 
+import "sync"
+
 type Sprite struct {
 	X             int
 	Y             int
@@ -9,16 +11,9 @@ type Sprite struct {
 	PrevDirection int
 }
 
-type Offset struct {
-	X int
-	Y int
-}
-
-func NewSprite(sprite Sprite) *Sprite {
-	return &Sprite{
-		X:     sprite.X,
-		Y:     sprite.Y,
-		XInit: sprite.XInit,
-		YInit: sprite.YInit,
-	}
+type Movement struct {
+	DirectionCounter int
+	Directions       []int
+	DirectionLock    int
+	DirectionMtx     sync.RWMutex
 }

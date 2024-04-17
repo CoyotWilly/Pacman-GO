@@ -3,11 +3,8 @@ package main
 import (
 	"Pacman/src"
 	"Pacman/src/config"
-	"Pacman/src/enum"
 	"Pacman/src/factory"
-	"Pacman/src/mapper"
 	"Pacman/src/model"
-	"Pacman/src/pathfinder"
 	"flag"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -73,7 +70,7 @@ func (g *Game) Update() error {
 	go model.UpdateGhosts(&ghosts, model.MazeCharacter{Row: g.row, Col: g.col, Char: int32(maze[g.row][g.col])},
 		&maze, fruitTimer, &fruitMtx, imgFactory, gameConfig)
 	go model.ProcessGhostElimination(unit, &ghosts, &score, &lives, &isOver)
-	go model.MoveGhosts(&ghosts, maze, windowConfig, mazeDimensions)
+	//go model.MoveGhosts(&ghosts, maze, windowConfig, mazeDimensions)
 
 	g.row = pacman.Y / windowConfig.CharSize
 	g.col = pacman.X / windowConfig.CharSize
@@ -163,24 +160,24 @@ func main() {
 		ebiten.SetWindowSize(windowConfig.Width, windowConfig.Height)
 	}
 
-	test := pathfinder.ParseWorld(mapper.Maze2MazeString(maze))
-	p, _, found := pathfinder.Path(test.From(enum.NoName), test.To(enum.NoName))
-	if !found {
-		log.Print("Could not find a path")
-	} else {
-		sMaze := test.RenderPath(p)
-		log.Print(pathfinder.EstimateDistance(sMaze))
-		mapper.MazeWithPath2Directions(sMaze, model.MazeCharacter{
-			Row: ghosts[0].PositionLines.Y,
-			Col: ghosts[0].PositionLines.X,
-		}, pathfinder.EstimateDistance(sMaze))
-	}
-	//if e := ebiten.RunGame(&Game{
-	//	row: pacman.X / windowConfig.CharSize,
-	//	col: pacman.Y / windowConfig.CharSize,
-	//}); e != nil {
-	//	log.Fatalf("[GAME] Startup failed. %s", e)
+	//test := pathfinder.ParseWorld(mapper.Maze2MazeString(maze))
+	//p, _, found := pathfinder.Path(test.From(enum.NoName), test.To(enum.NoName))
+	//if !found {
+	//	log.Print("Could not find a path")
+	//} else {
+	//	sMaze := test.RenderPath(p)
+	//	log.Print(pathfinder.EstimateDistance(sMaze))
+	//	mapper.MazeWithPath2Directions(sMaze, model.MazeCharacter{
+	//		Row: ghosts[0].PositionLines.Y,
+	//		Col: ghosts[0].PositionLines.X,
+	//	}, pathfinder.EstimateDistance(sMaze))
 	//}
+	if e := ebiten.RunGame(&Game{
+		row: pacman.X / windowConfig.CharSize,
+		col: pacman.Y / windowConfig.CharSize,
+	}); e != nil {
+		log.Fatalf("[GAME] Startup failed. %s", e)
+	}
 }
 
 func loadFont() error {

@@ -1,8 +1,7 @@
-package mapper
+package model
 
 import (
 	"Pacman/src/enum"
-	"Pacman/src/model"
 	"slices"
 	"strings"
 )
@@ -21,13 +20,13 @@ func Maze2MazeString(maze []string) string {
 	return out
 }
 
-func MazeWithPath2Directions(path string, position model.MazeCharacter, movesCount int) []int {
+func MazeWithPath2Directions(path string, position MazeCharacter, movesCount int) []int {
 	pathArray := strings.Split(strings.ReplaceAll(path, "\r\n", "\n"), "\n")
 	var directions []int
 
 	for i := 0; i < movesCount-1; i++ {
 		var filtered []int
-		moves, newPosition := model.CheckPossiblePaths(position, pathArray)
+		moves, newPosition := CheckPossiblePaths(position, pathArray)
 
 		if i > 0 && len(moves) > 1 {
 			for _, move := range moves {

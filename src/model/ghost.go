@@ -4,6 +4,7 @@ import (
 	"Pacman/src/config"
 	"Pacman/src/enum"
 	"Pacman/src/factory"
+	"Pacman/src/pathfinder"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"math"
@@ -15,6 +16,7 @@ import (
 type Ghost struct {
 	PositionLines  Sprite
 	PositionPixels Sprite
+	Name           enum.GhostsName
 	Shape          *ebiten.Image
 	Status         enum.GhostsStatus
 	Movement       Movement
@@ -22,6 +24,7 @@ type Ghost struct {
 
 var (
 	ghostUpdateMtx sync.RWMutex
+	mazeLayout     []string
 )
 
 func DrawDirection(towards ebiten.Key) int {
@@ -45,17 +48,20 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 		rect = factory.Pacman
 		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
 		break
-	case enum.GHOST:
-		rect = ghosts[unit.Col%ghostsCount].Shape
-		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
-		options.GeoM.Translate(float64(ghosts[unit.Col%ghostsCount].PositionPixels.X),
-			float64(ghosts[unit.Col%ghostsCount].PositionPixels.Y))
+	case enum.BLINKY:
 		break
 	case enum.POINT:
 		*dotsCount++
 		break
 	default:
 		return
+	}
+
+	if unit.Char == enum.BLINKY || unit.Char == enum.INKY || unit.Char == enum.PINKY || unit.Char == enum.CLYDE {
+		rect = ghosts[0].Shape // TODO REPLACE INDEX 0 WITH THIS "unit.Col%ghostsCount"
+		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
+		options.GeoM.Translate(float64(ghosts[0].PositionPixels.X), // TODO SAME HERE 2x "unit.Col%ghostsCount"
+			float64(ghosts[0].PositionPixels.Y))
 	}
 
 	if rect == factory.Pacman {
@@ -124,14 +130,24 @@ func UpdateGhosts(ghosts *[]*Ghost, unit MazeCharacter, maze *[]string, fruitTim
 func MoveGhosts(ghosts *[]*Ghost, maze []string, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
 	var updated []*Ghost
 	for _, ghost := range *ghosts {
-		if ghost.Movement.DirectionLock < windowConfig.CharSize && ghost.Movement.Direction != enum.UNDEFINED {
-			go headTowardsGivenPoint(MazeCharacter{Row: 6, Col: 14}, ghost,
-				[]int{ghost.Movement.Direction}, windowConfig, mazeDim)
-		} else {
+		if ghost.Movement.Directions == nil {
+			//directions := generatePath(ghost, maze)
+			//ghost.Movement = Movement{
+			//	DirectionCounter: 0,
+			//	Directions:       directions,
+			//	DirectionLock:    directions[0],
+			//}
+		}
+
+		if ghost.Movement.DirectionLock < windowConfig.CharSize {
+			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
+		} else if ghost.Movement.DirectionCounter < len(ghost.Movement.Directions) &&
+			len(ghost.Movement.Directions) != 0 {
 			ghost.Movement.DirectionLock = 0
-			log.Printf("Lock: %d, Direction: %d", ghost.Movement.DirectionLock, ghost.Movement.Direction)
-			moves := CheckPossibleMoves(MazeCharacter{Row: ghost.PositionLines.Y, Col: ghost.PositionLines.X}, maze)
-			go headTowardsGivenPoint(MazeCharacter{Row: 6, Col: 14}, ghost, moves, windowConfig, mazeDim)
+			ghost.Movement.DirectionCounter++
+			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
+		} else {
+			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
 		}
 
 		updated = append(updated, ghost)
@@ -157,17 +173,18 @@ func changeStatus(ghosts *[]*Ghost, assets []*ebiten.Image, mtx *sync.RWMutex) {
 
 func headTowardsGivenPoint(point MazeCharacter, ghost *Ghost, moves []int,
 	conf config.WindowConfig, mazeDim MazeDimensions) {
-	moveX := false
+
+	moved := false
 	if ghost.PositionLines.X > point.Row && slices.Contains(moves, enum.UP) {
-		pixelMove(ghost, conf.CharSize*point.Row, enum.UP)
-		moveX = true
+		//pixelMove(ghost, conf.CharSize*point.Row, enum.UP)
+		moved = true
 	} else if ghost.PositionLines.X < point.Row && slices.Contains(moves, enum.DOWN) {
-		pixelMove(ghost, conf.CharSize*point.Row, enum.DOWN)
-		moveX = true
+		//pixelMove(ghost, conf.CharSize*point.Row, enum.DOWN)
+		moved = true
 	}
 	ghost.PositionLines.X = int(math.Round(float64(ghost.PositionPixels.X) / float64(conf.CharSize)))
 
-	if moveX {
+	if moved {
 		ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
 
 		return
@@ -175,25 +192,31 @@ func headTowardsGivenPoint(point MazeCharacter, ghost *Ghost, moves []int,
 
 	if slices.Contains(moves, enum.LEFT) && ghost.PositionPixels.Y > conf.CharSize &&
 		ghost.PositionLines.Y > point.Col {
-		pixelMove(ghost, conf.CharSize*point.Col, enum.LEFT)
+		//pixelMove(ghost, conf.CharSize*point.Col, enum.LEFT)
+		moved = true
 	} else if slices.Contains(moves, enum.RIGHT) && ghost.PositionPixels.Y < mazeDim.HeightPixels &&
 		ghost.PositionLines.Y < point.Col {
-		pixelMove(ghost, conf.CharSize*point.Col, enum.RIGHT)
+		//pixelMove(ghost, conf.CharSize*point.Col, enum.RIGHT)
+		moved = true
 	}
 	ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
+
+	if moved {
+		return
+	}
 }
 
-func pixelMove(ghost *Ghost, position int, direction int) {
+func pixelMove(ghost *Ghost, direction int) {
 	ghost.Movement.DirectionMtx.Lock()
 	defer ghost.Movement.DirectionMtx.Unlock()
 
-	if ghost.PositionPixels.X != position && direction > 1 {
+	if direction > 1 {
 		if direction == enum.RIGHT {
 			ghost.PositionPixels.X++
 		} else {
 			ghost.PositionPixels.X--
 		}
-	} else if ghost.PositionPixels.Y != position && direction < 2 {
+	} else {
 		if direction == enum.DOWN {
 			ghost.PositionPixels.Y++
 		} else {
@@ -201,6 +224,22 @@ func pixelMove(ghost *Ghost, position int, direction int) {
 		}
 	}
 
-	ghost.Movement.Direction = direction
 	ghost.Movement.DirectionLock++
+}
+
+func generatePath(ghost *Ghost, maze []string) []int {
+	world := pathfinder.ParseWorld(Maze2MazeString(maze))
+	p, _, found := pathfinder.Path(world.From(enum.NoName), world.To(enum.NoName))
+	if !found {
+		log.Panic("Could not find a path")
+	} else {
+		sMaze := world.RenderPath(p)
+
+		return MazeWithPath2Directions(sMaze, MazeCharacter{
+			Row: ghost.PositionLines.Y,
+			Col: ghost.PositionLines.X,
+		}, pathfinder.EstimateDistance(sMaze))
+	}
+
+	return nil
 }

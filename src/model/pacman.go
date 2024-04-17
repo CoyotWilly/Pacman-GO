@@ -7,6 +7,10 @@ import (
 	"sync"
 )
 
+const (
+	GhostEliminationReward = 10
+)
+
 func ProcessInput(pacman *Sprite, moves []int, mtx *sync.RWMutex) {
 	if ebiten.IsKeyPressed(ebiten.KeyW) && slices.Contains(moves, enum.UP) {
 		mtx.Lock()
@@ -44,6 +48,31 @@ func ProcessTeleport(pacman *Sprite, mazeDim MazeDimensions, mtx *sync.RWMutex) 
 
 }
 
+// ProcessGhostElimination TODO: ghosts are currently static - check this logic later
+func ProcessGhostElimination(unit MazeCharacter, ghosts *[]*Ghost, score *int,
+	lives *int, isOver *bool) {
+	for _, ghost := range *ghosts {
+		if ghost.PositionLines.X == unit.Row && ghost.PositionLines.Y == unit.Col {
+			if ghost.Status == enum.Infected {
+				ghost.PositionLines = Sprite{
+					X:     ghost.PositionLines.XInit,
+					Y:     ghost.PositionLines.YInit,
+					XInit: ghost.PositionLines.XInit,
+					YInit: ghost.PositionLines.YInit,
+				}
+				*score += GhostEliminationReward
+
+			} else {
+				// TODO game ends after hitting the wall
+				//*lives--
+				//if *lives < 1 {
+				//	*isOver = true
+				//}
+			}
+		}
+	}
+}
+
 func CheckPossibleMoves(position MazeCharacter, maze []string) []int {
 	var moves []int
 	if maze[position.Row-1][position.Col] != enum.WALL {
@@ -60,4 +89,28 @@ func CheckPossibleMoves(position MazeCharacter, maze []string) []int {
 	}
 
 	return moves
+}
+
+func CheckPossiblePaths(position MazeCharacter, maze []string) ([]int, MazeCharacter) {
+	var moves []int
+	newPosition := position
+	if maze[position.Row-1][position.Col] == enum.PATH {
+		moves = append(moves, enum.UP)
+		newPosition.Row--
+	}
+	if maze[position.Row+1][position.Col] == enum.PATH {
+		moves = append(moves, enum.DOWN)
+		newPosition.Row++
+	}
+
+	if maze[position.Row][position.Col+1] == enum.PATH {
+		moves = append(moves, enum.RIGHT)
+		newPosition.Col++
+	}
+	if maze[position.Row][position.Col-1] == enum.PATH {
+		moves = append(moves, enum.LEFT)
+		newPosition.Col--
+	}
+
+	return moves, newPosition
 }

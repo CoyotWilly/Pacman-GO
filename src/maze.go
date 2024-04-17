@@ -45,18 +45,27 @@ func LoadMaze(
 				x := int((float64(row) + HorizontalOffset) * float64(window.CharSize))
 				y := col * window.CharSize
 				*pacman = model.Sprite{X: x, Y: y, XInit: x, YInit: y}
-			case enum.GHOST:
-				if len(*ghosts) < ghostsCount {
-					*ghosts = append(*ghosts,
-						&model.Ghost{
-							Position: model.Sprite{X: row, Y: col, XInit: row, YInit: col},
-							Shape:    ghostsImg[col%ghostsCount],
-							Status:   enum.Normal,
-						})
-				}
 			case enum.POINT:
 				*dotsCount++
 			}
+
+			if len(*ghosts) < ghostsCount &&
+				(char == enum.BLINKY || char == enum.INKY || char == enum.PINKY || char == enum.CLYDE) {
+				*ghosts = append(*ghosts,
+					&model.Ghost{
+						PositionLines: model.Sprite{X: col, Y: row, XInit: col, YInit: row},
+						PositionPixels: model.Sprite{X: col * window.CharSize, Y: row * window.CharSize,
+							XInit: col * window.CharSize, YInit: row * window.CharSize},
+						Shape:  ghostsImg[col%ghostsCount],
+						Status: enum.Normal,
+						Name:   enum.NoName,
+						Movement: model.Movement{
+							DirectionCounter: enum.UNDEFINED,
+							DirectionLock:    enum.UNDEFINED,
+						},
+					})
+			}
+
 			dim.HeightLines = row
 		}
 	}

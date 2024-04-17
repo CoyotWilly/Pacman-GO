@@ -1,8 +1,10 @@
 package model
 
+import "Pacman/src/enum"
+
 func ProcessPoint(maze []string, unit MazeCharacter, score *int) []string {
 	var out []string
-	if maze[unit.Row][unit.Col] == '.' {
+	if maze[unit.Row][unit.Col] == enum.POINT {
 		*score++
 		for row, line := range maze {
 			if row != unit.Row {
@@ -13,7 +15,7 @@ func ProcessPoint(maze []string, unit MazeCharacter, score *int) []string {
 			var newLine []uint8
 			for col, _ := range line {
 				if unit.Col == col {
-					newLine = append(newLine, ' ')
+					newLine = append(newLine, enum.EMPTY)
 
 					continue
 				}
