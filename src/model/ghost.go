@@ -8,9 +8,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"math"
+	"math/rand"
 	"slices"
 	"sync"
 	"time"
+	"unicode"
 )
 
 type Ghost struct {
@@ -127,27 +129,30 @@ func UpdateGhosts(ghosts *[]*Ghost, unit MazeCharacter, maze *[]string, fruitTim
 	}
 }
 
-func MoveGhosts(ghosts *[]*Ghost, maze []string, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
+func MoveGhosts(ghosts *[]*Ghost, maze *[]string, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
 	var updated []*Ghost
 	for _, ghost := range *ghosts {
+		if ghost.Movement.DirectionCounter == len(ghost.Movement.Directions)-1 && ghost.Movement.Directions != nil {
+			*maze = changeGhostMarker(maze, ghost.Name, mazeDim)
+			ghost.Movement.Directions = nil
+		}
+
 		if ghost.Movement.Directions == nil {
-			//directions := generatePath(ghost, maze)
-			//ghost.Movement = Movement{
-			//	DirectionCounter: 0,
-			//	Directions:       directions,
-			//	DirectionLock:    directions[0],
-			//}
+			directions := generatePath(ghost, *maze)
+			ghost.Movement = Movement{
+				DirectionCounter: 0,
+				Directions:       directions,
+				DirectionLock:    directions[0],
+			}
 		}
 
 		if ghost.Movement.DirectionLock < windowConfig.CharSize {
-			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
+			go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
 		} else if ghost.Movement.DirectionCounter < len(ghost.Movement.Directions) &&
 			len(ghost.Movement.Directions) != 0 {
 			ghost.Movement.DirectionLock = 0
 			ghost.Movement.DirectionCounter++
-			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
-		} else {
-			//go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
+			go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
 		}
 
 		updated = append(updated, ghost)
@@ -227,9 +232,77 @@ func pixelMove(ghost *Ghost, direction int) {
 	ghost.Movement.DirectionLock++
 }
 
+func changeGhostMarker(maze *[]string, ghostName enum.GhostsName, dim MazeDimensions) []string {
+	nameChar := pathfinder.Name2Rune(ghostName)
+	newX := enum.UNDEFINED
+	newY := enum.UNDEFINED
+	var newMaze []string
+	var newMazeTemp []string
+
+	// SEARCHING FOR NEW DESTINATION
+	for {
+		x, y := rand.Int()%dim.WidthLines, rand.Int()%dim.HeightLines
+		var tempMaze []string
+
+		for i, row := range *maze {
+			var tempRow string
+			for j, c := range row {
+				if i == x && j == y && c == enum.EMPTY {
+					tempRow += string(pathfinder.Name2Rune(enum.NoName))
+				} else {
+					tempRow += string(c)
+				}
+			}
+			tempMaze = append(tempMaze, tempRow)
+		}
+
+		for i, row := range tempMaze {
+			if i != x {
+				continue
+			}
+
+			for j, c := range row {
+				if i == x && j == y && c == pathfinder.Name2Rune(enum.NoName) {
+					world := pathfinder.ParseWorld(Maze2MazeString(*maze))
+					_, _, found := pathfinder.Path(world.From(ghostName), world.To(enum.NoName))
+					if found {
+						newX = x
+						newY = y
+						break
+					}
+				}
+			}
+		}
+
+		if newX != enum.UNDEFINED && newY != enum.UNDEFINED {
+			newMazeTemp = tempMaze
+			break
+		}
+	}
+
+	for i, row := range newMazeTemp {
+		var newRow string
+		for j, c := range row {
+			stringChar := c
+			if c == nameChar {
+				stringChar = enum.EMPTY
+			} else if c == unicode.ToUpper(nameChar) {
+				stringChar = nameChar
+			} else if i == newX && j == newY {
+				stringChar = unicode.ToUpper(nameChar)
+			}
+			newRow += string(stringChar)
+		}
+
+		newMaze = append(newMaze, newRow)
+	}
+
+	return newMaze
+}
+
 func generatePath(ghost *Ghost, maze []string) []int {
 	world := pathfinder.ParseWorld(Maze2MazeString(maze))
-	p, _, found := pathfinder.Path(world.From(enum.NoName), world.To(enum.NoName))
+	p, _, found := pathfinder.Path(world.From(ghost.Name), world.To(ghost.Name))
 	if !found {
 		log.Panic("Could not find a path")
 	} else {

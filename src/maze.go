@@ -58,7 +58,7 @@ func LoadMaze(
 							XInit: col * window.CharSize, YInit: row * window.CharSize},
 						Shape:  ghostsImg[col%ghostsCount],
 						Status: enum.Normal,
-						Name:   enum.NoName,
+						Name:   enum.Blinky,
 						Movement: model.Movement{
 							DirectionCounter: enum.UNDEFINED,
 							DirectionLock:    enum.UNDEFINED,

@@ -70,7 +70,7 @@ func (g *Game) Update() error {
 	go model.UpdateGhosts(&ghosts, model.MazeCharacter{Row: g.row, Col: g.col, Char: int32(maze[g.row][g.col])},
 		&maze, fruitTimer, &fruitMtx, imgFactory, gameConfig)
 	go model.ProcessGhostElimination(unit, &ghosts, &score, &lives, &isOver)
-	//go model.MoveGhosts(&ghosts, maze, windowConfig, mazeDimensions)
+	go model.MoveGhosts(&ghosts, &maze, windowConfig, mazeDimensions)
 
 	g.row = pacman.Y / windowConfig.CharSize
 	g.col = pacman.X / windowConfig.CharSize

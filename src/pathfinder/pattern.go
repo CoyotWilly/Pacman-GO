@@ -92,8 +92,6 @@ var KindCosts = map[int]float64{
 	KindMountain: 3.0,
 }
 
-var xPrev, yPrev = enum.UNDEFINED, enum.UNDEFINED
-
 // A Tile is a tile in a grid which implements Pattern.
 type Tile struct {
 	// Kind is the kind of tile, potentially affecting movement.
@@ -102,6 +100,10 @@ type Tile struct {
 	X, Y int
 	// W is a reference to the World that the tile is a part of.
 	W World
+}
+
+func Name2Rune(name enum.GhostsName) rune {
+	return ghostName2Rune[name]
 }
 
 // PathNeighbors returns the neighbors of the tile, excluding blockers and

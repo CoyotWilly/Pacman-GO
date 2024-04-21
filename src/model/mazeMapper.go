@@ -25,7 +25,7 @@ func MazeWithPath2Directions(path string, position MazeCharacter, movesCount int
 	var directions []int
 
 	for i := 0; i < movesCount-1; i++ {
-		var filtered []int
+		var filtered []int // TODO fix moves generator
 		moves, newPosition := CheckPossiblePaths(position, pathArray)
 
 		if i > 0 && len(moves) > 1 {
