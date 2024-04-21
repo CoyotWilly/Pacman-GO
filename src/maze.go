@@ -100,3 +100,22 @@ func DrawMaze(screen *ebiten.Image, unit *model.MazeCharacter,
 
 	screen.DrawImage(rect, options)
 }
+
+func LoadGhostsMaze(maze []string) []string {
+	var ghostsMaze []string
+
+	for _, row := range maze {
+		var rowString string
+		for _, c := range row {
+			if c == enum.POINT {
+				rowString += string(enum.EMPTY)
+			} else {
+				rowString += string(c)
+			}
+		}
+
+		ghostsMaze = append(ghostsMaze, rowString)
+	}
+
+	return ghostsMaze
+}
