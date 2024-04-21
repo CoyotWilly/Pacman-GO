@@ -155,6 +155,8 @@ func MoveGhosts(ghosts *[]*Ghost, maze *[]string, windowConfig config.WindowConf
 			go pixelMove(ghost, ghost.Movement.Directions[ghost.Movement.DirectionCounter])
 		}
 
+		ghost.PositionLines.X = int(math.Round(float64(ghost.PositionPixels.X) / float64(windowConfig.CharSize)))
+		ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(windowConfig.CharSize)))
 		updated = append(updated, ghost)
 	}
 	ghosts = &updated
@@ -279,7 +281,7 @@ func changeGhostMarker(maze *[]string, ghostName enum.GhostsName, dim MazeDimens
 			break
 		}
 	}
-
+	// New maze config creation
 	for i, row := range newMazeTemp {
 		var newRow string
 		for j, c := range row {
