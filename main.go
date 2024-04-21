@@ -160,18 +160,6 @@ func main() {
 		ebiten.SetWindowSize(windowConfig.Width, windowConfig.Height)
 	}
 
-	//test := pathfinder.ParseWorld(mapper.Maze2MazeString(maze))
-	//p, _, found := pathfinder.Path(test.From(enum.NoName), test.To(enum.NoName))
-	//if !found {
-	//	log.Print("Could not find a path")
-	//} else {
-	//	sMaze := test.RenderPath(p)
-	//	log.Print(pathfinder.EstimateDistance(sMaze))
-	//	mapper.MazeWithPath2Directions(sMaze, model.MazeCharacter{
-	//		Row: ghosts[0].PositionLines.Y,
-	//		Col: ghosts[0].PositionLines.X,
-	//	}, pathfinder.EstimateDistance(sMaze))
-	//}
 	if e := ebiten.RunGame(&Game{
 		row: pacman.X / windowConfig.CharSize,
 		col: pacman.Y / windowConfig.CharSize,

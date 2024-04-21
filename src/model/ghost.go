@@ -9,7 +9,6 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"slices"
 	"sync"
 	"time"
 	"unicode"
@@ -175,41 +174,6 @@ func changeStatus(ghosts *[]*Ghost, assets []*ebiten.Image, mtx *sync.RWMutex) {
 
 		ghost.Shape = assets[i]
 		ghost.Status = enum.Normal
-	}
-}
-
-func headTowardsGivenPoint(point MazeCharacter, ghost *Ghost, moves []int,
-	conf config.WindowConfig, mazeDim MazeDimensions) {
-
-	moved := false
-	if ghost.PositionLines.X > point.Row && slices.Contains(moves, enum.UP) {
-		//pixelMove(ghost, conf.CharSize*point.Row, enum.UP)
-		moved = true
-	} else if ghost.PositionLines.X < point.Row && slices.Contains(moves, enum.DOWN) {
-		//pixelMove(ghost, conf.CharSize*point.Row, enum.DOWN)
-		moved = true
-	}
-	ghost.PositionLines.X = int(math.Round(float64(ghost.PositionPixels.X) / float64(conf.CharSize)))
-
-	if moved {
-		ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
-
-		return
-	}
-
-	if slices.Contains(moves, enum.LEFT) && ghost.PositionPixels.Y > conf.CharSize &&
-		ghost.PositionLines.Y > point.Col {
-		//pixelMove(ghost, conf.CharSize*point.Col, enum.LEFT)
-		moved = true
-	} else if slices.Contains(moves, enum.RIGHT) && ghost.PositionPixels.Y < mazeDim.HeightPixels &&
-		ghost.PositionLines.Y < point.Col {
-		//pixelMove(ghost, conf.CharSize*point.Col, enum.RIGHT)
-		moved = true
-	}
-	ghost.PositionLines.Y = int(math.Round(float64(ghost.PositionPixels.Y) / float64(conf.CharSize)))
-
-	if moved {
-		return
 	}
 }
 
