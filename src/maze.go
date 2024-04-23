@@ -5,11 +5,14 @@ import (
 	"Pacman/src/enum"
 	"Pacman/src/factory"
 	"Pacman/src/model"
+	"Pacman/src/pathfinder"
 	"bufio"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image/color"
 	"log"
 	"os"
+	"slices"
+	"unicode"
 )
 
 const (
@@ -36,7 +39,7 @@ func LoadMaze(
 		line := scanner.Text()
 		*maze = append(*maze, line)
 	}
-	ghostsImg := []*ebiten.Image{factory.Pinky, factory.Blinky, factory.Inky, factory.Clyde}
+	ghostsImg := map[int32]*ebiten.Image{'p': factory.Pinky, 'b': factory.Blinky, 'i': factory.Inky, 'c': factory.Clyde}
 	for row, line := range *maze {
 		for col, char := range line {
 			dim.WidthLines = col
@@ -56,9 +59,9 @@ func LoadMaze(
 						PositionLines: model.Sprite{X: col, Y: row, XInit: col, YInit: row},
 						PositionPixels: model.Sprite{X: col * window.CharSize, Y: row * window.CharSize,
 							XInit: col * window.CharSize, YInit: row * window.CharSize},
-						Shape:  ghostsImg[col%ghostsCount],
+						Shape:  ghostsImg[char],
 						Status: enum.Normal,
-						Name:   enum.Blinky,
+						Name:   enum.Rune2GhostName(char),
 						Movement: model.Movement{
 							DirectionCounter: enum.UNDEFINED,
 							DirectionLock:    enum.UNDEFINED,
@@ -101,13 +104,18 @@ func DrawMaze(screen *ebiten.Image, unit *model.MazeCharacter,
 	screen.DrawImage(rect, options)
 }
 
-func LoadGhostsMaze(maze []string) []string {
+func LoadGhostsMaze(maze []string, name enum.GhostsName) []string {
 	var ghostsMaze []string
+	char := pathfinder.Name2Rune(name)
+	chars := []int32{pathfinder.Name2Rune(enum.Pinky), unicode.ToUpper(pathfinder.Name2Rune(enum.Pinky)),
+		pathfinder.Name2Rune(enum.Inky), unicode.ToUpper(pathfinder.Name2Rune(enum.Inky)),
+		pathfinder.Name2Rune(enum.Blinky), unicode.ToUpper(pathfinder.Name2Rune(enum.Blinky)),
+		pathfinder.Name2Rune(enum.Clyde), unicode.ToUpper(pathfinder.Name2Rune(enum.Clyde))}
 
 	for _, row := range maze {
 		var rowString string
 		for _, c := range row {
-			if c == enum.POINT {
+			if c == enum.POINT || (slices.Contains(chars, c) && (unicode.ToUpper(c) != unicode.ToUpper(char))) {
 				rowString += string(enum.EMPTY)
 			} else {
 				rowString += string(c)

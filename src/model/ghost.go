@@ -21,11 +21,11 @@ type Ghost struct {
 	Shape          *ebiten.Image
 	Status         enum.GhostsStatus
 	Movement       Movement
+	Maze           []string
 }
 
 var (
 	ghostUpdateMtx sync.RWMutex
-	mazeLayout     []string
 )
 
 func DrawDirection(towards ebiten.Key) int {
@@ -43,6 +43,11 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 	factory *factory.AssetsFactory, pacman *Sprite, ghosts []*Ghost, ghostsCount int, dotsCount *int) {
 	rect := ebiten.NewImage(windowConfig.CharSize, windowConfig.CharSize)
 	options := &ebiten.DrawImageOptions{}
+	ghostsMap := make(map[int32]*Ghost)
+
+	for _, ghost := range ghosts {
+		ghostsMap[pathfinder.Name2Rune(ghost.Name)] = ghost
+	}
 
 	switch unit.Char {
 	case enum.PACMAN:
@@ -50,6 +55,12 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
 		break
 	case enum.BLINKY:
+		break
+	case enum.INKY:
+		break
+	case enum.PINKY:
+		break
+	case enum.CLYDE:
 		break
 	case enum.POINT:
 		*dotsCount++
@@ -59,10 +70,10 @@ func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.
 	}
 
 	if unit.Char == enum.BLINKY || unit.Char == enum.INKY || unit.Char == enum.PINKY || unit.Char == enum.CLYDE {
-		rect = ghosts[0].Shape // TODO REPLACE INDEX 0 WITH THIS "unit.Col%ghostsCount"
+		rect = ghostsMap[unit.Char].Shape
 		options.GeoM.Scale(windowConfig.ScaleFactor+0.1, windowConfig.ScaleFactor+0.1)
-		options.GeoM.Translate(float64(ghosts[0].PositionPixels.X), // TODO SAME HERE 2x "unit.Col%ghostsCount"
-			float64(ghosts[0].PositionPixels.Y))
+		options.GeoM.Translate(float64(ghostsMap[unit.Char].PositionPixels.X),
+			float64(ghostsMap[unit.Char].PositionPixels.Y))
 	}
 
 	if rect == factory.Pacman {
@@ -128,16 +139,16 @@ func UpdateGhosts(ghosts *[]*Ghost, unit MazeCharacter, maze *[]string, fruitTim
 	}
 }
 
-func MoveGhosts(ghosts *[]*Ghost, maze *[]string, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
+func MoveGhosts(ghosts *[]*Ghost, windowConfig config.WindowConfig, mazeDim MazeDimensions) {
 	var updated []*Ghost
 	for _, ghost := range *ghosts {
 		if ghost.Movement.DirectionCounter == len(ghost.Movement.Directions)-1 && ghost.Movement.Directions != nil {
-			*maze = changeGhostMarker(maze, ghost.Name, mazeDim)
+			ghost.Maze = changeGhostMarker(&ghost.Maze, ghost.Name, mazeDim)
 			ghost.Movement.Directions = nil
 		}
 
 		if ghost.Movement.Directions == nil {
-			directions := generatePath(ghost, *maze)
+			directions := generatePath(ghost, ghost.Maze)
 			ghost.Movement = Movement{
 				DirectionCounter: 0,
 				Directions:       directions,

@@ -48,7 +48,6 @@ var (
 	pacman     model.Sprite
 	ghosts     []*model.Ghost
 	maze       []string
-	ghostsMaze []string
 	score      int
 	dotsCount  int
 	fruitTimer *time.Timer
@@ -71,7 +70,7 @@ func (g *Game) Update() error {
 	go model.UpdateGhosts(&ghosts, model.MazeCharacter{Row: g.row, Col: g.col, Char: int32(maze[g.row][g.col])},
 		&maze, fruitTimer, &fruitMtx, imgFactory, gameConfig)
 	go model.ProcessGhostElimination(unit, &ghosts, &score, &lives, &isOver)
-	go model.MoveGhosts(&ghosts, &ghostsMaze, windowConfig, mazeDimensions)
+	go model.MoveGhosts(&ghosts, windowConfig, mazeDimensions)
 
 	g.row = pacman.Y / windowConfig.CharSize
 	g.col = pacman.X / windowConfig.CharSize
@@ -146,7 +145,10 @@ func main() {
 	if e != nil {
 		log.Panicf("[GAME] Maze load failed")
 	}
-	ghostsMaze = src.LoadGhostsMaze(maze)
+
+	for _, ghost := range ghosts {
+		ghost.Maze = src.LoadGhostsMaze(maze, ghost.Name)
+	}
 
 	e = loadFont()
 	if e != nil {
