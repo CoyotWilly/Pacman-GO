@@ -40,7 +40,7 @@ func DrawDirection(towards ebiten.Key) int {
 }
 
 func DrawGhosts(screen *ebiten.Image, unit *MazeCharacter, windowConfig *config.WindowConfig,
-	factory *factory.AssetsFactory, pacman *Sprite, ghosts []*Ghost, ghostsCount int, dotsCount *int) {
+	factory *factory.AssetsFactory, pacman *Sprite, ghosts []*Ghost, dotsCount *int) {
 	rect := ebiten.NewImage(windowConfig.CharSize, windowConfig.CharSize)
 	options := &ebiten.DrawImageOptions{}
 	ghostsMap := make(map[int32]*Ghost)

@@ -115,7 +115,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for col, char := range line {
 			read := model.MazeCharacter{Row: row, Col: col, Line: line, Char: char}
 			src.DrawMaze(screen, &read, &windowConfig, &imgFactory)
-			model.DrawGhosts(screen, &read, &windowConfig, &imgFactory, &pacman, ghosts, ghostsCount, &dotsCount)
+			model.DrawGhosts(screen, &read, &windowConfig, &imgFactory, &pacman, ghosts, &dotsCount)
 		}
 	}
 }
