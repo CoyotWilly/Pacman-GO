@@ -148,7 +148,7 @@ func MoveGhosts(ghosts *[]*Ghost, windowConfig config.WindowConfig, mazeDim Maze
 		}
 
 		if ghost.Movement.Directions == nil {
-			directions := generatePath(ghost, ghost.Maze)
+			directions := generatePath(ghost)
 			ghost.Movement = Movement{
 				DirectionCounter: 0,
 				Directions:       directions,
@@ -277,8 +277,24 @@ func changeGhostMarker(maze *[]string, ghostName enum.GhostsName, dim MazeDimens
 	return newMaze
 }
 
-func generatePath(ghost *Ghost, maze []string) []int {
-	world := pathfinder.ParseWorld(Maze2MazeString(maze))
+func generatePath(ghost *Ghost) []int {
+	var fixedMaze []string
+	for i, row := range ghost.Maze {
+		var fixedRow string
+		for j, c := range row {
+			if i == ghost.PositionLines.Y && j == ghost.PositionLines.X {
+				fixedRow += string(pathfinder.Name2Rune(ghost.Name))
+			} else if c == pathfinder.Name2Rune(ghost.Name) {
+				fixedRow += string(enum.EMPTY)
+			} else {
+				fixedRow += string(c)
+			}
+		}
+		fixedMaze = append(fixedMaze, fixedRow)
+	}
+	ghost.Maze = fixedMaze
+
+	world := pathfinder.ParseWorld(Maze2MazeString(ghost.Maze))
 	p, _, found := pathfinder.Path(world.From(ghost.Name), world.To(ghost.Name))
 	if !found {
 		log.Panic("Could not find a path")
