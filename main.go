@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	fontSize = 24
+	fontSize = 72
 	Dpi      = 72
 )
 
@@ -104,8 +104,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 
 		for i := 0; i < len(msg); i++ {
-			msg := fmt.Sprintf(strings.ToUpper(string([]rune(msg)[i])))
-			text.Draw(screen, msg, fontFamily, i*20+50, g.row*85+55, fontColor)
+			display := fmt.Sprintf(strings.ToUpper(string([]rune(msg)[i])))
+			xMargin := ((windowConfig.CharSize * mazeDimensions.WidthLines) - (len(msg) * fontSize)) / 2
+			text.Draw(screen, display, fontFamily, i*fontSize+xMargin,
+				windowConfig.CharSize*mazeDimensions.HeightLines/2, fontColor)
 		}
 
 		return
@@ -153,6 +155,11 @@ func main() {
 	e = loadFont()
 	if e != nil {
 		log.Printf("[GAME] Font load failed. %s", e)
+	}
+
+	e = config.LoadMessages(*messagesFile, &messages)
+	if e != nil {
+		log.Printf("[GAME] UI messages load failed. %s", e)
 	}
 
 	ebiten.SetWindowTitle(windowConfig.Name)

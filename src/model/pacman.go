@@ -48,11 +48,10 @@ func ProcessTeleport(pacman *Sprite, mazeDim MazeDimensions, mtx *sync.RWMutex) 
 
 }
 
-// ProcessGhostElimination TODO: ghosts are currently static - check this logic later
 func ProcessGhostElimination(unit MazeCharacter, ghosts *[]*Ghost, score *int,
 	lives *int, isOver *bool) {
 	for _, ghost := range *ghosts {
-		if ghost.PositionLines.X == unit.Row && ghost.PositionLines.Y == unit.Col {
+		if ghost.PositionLines.X == unit.Col && ghost.PositionLines.Y == unit.Row {
 			if ghost.Status == enum.Infected {
 				ghost.PositionLines = Sprite{
 					X:     ghost.PositionLines.XInit,
@@ -63,11 +62,10 @@ func ProcessGhostElimination(unit MazeCharacter, ghosts *[]*Ghost, score *int,
 				*score += GhostEliminationReward
 
 			} else {
-				// TODO game ends after hitting the wall
-				//*lives--
-				//if *lives < 1 {
-				//	*isOver = true
-				//}
+				*lives--
+				if *lives < 1 {
+					*isOver = true
+				}
 			}
 		}
 	}

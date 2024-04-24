@@ -11,7 +11,7 @@ type Message struct {
 	Lose string `json:"lose"`
 }
 
-func LoadMessages(filePath string, configuration *WindowConfig) error {
+func LoadMessages(filePath string, messages *Message) error {
 	file, e := os.Open(filePath)
 
 	if e != nil {
@@ -28,7 +28,7 @@ func LoadMessages(filePath string, configuration *WindowConfig) error {
 	}(file)
 
 	parser := json.NewDecoder(file)
-	e = parser.Decode(&configuration)
+	e = parser.Decode(&messages)
 
 	if e != nil {
 		log.Fatalf("[CONFIG] Couldn't parse passed config file. %s", e)
