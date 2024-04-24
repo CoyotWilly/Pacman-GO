@@ -20,6 +20,7 @@ type AssetsFactory struct {
 	Inky     *ebiten.Image
 	Clyde    *ebiten.Image
 	Infected *ebiten.Image
+	Live     *ebiten.Image
 	Icon     image.Image
 }
 
@@ -60,6 +61,8 @@ func Create(consumer *AssetsFactory) error {
 			consumer.Dot = img
 		case "infected":
 			consumer.Infected = img
+		case "live":
+			consumer.Live = img
 		default:
 			log.Printf("[FACTORY] Unknown field: %s.", strings.Split(file.Name(), "."))
 		}

@@ -120,6 +120,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			model.DrawGhosts(screen, &read, &windowConfig, &imgFactory, &pacman, ghosts, &dotsCount)
 		}
 	}
+	model.DrawLives(screen, imgFactory.Live, lives, model.MazeCharacter{
+		Row: windowConfig.CharSize * mazeDimensions.WidthLines, Col: 0,
+	})
 }
 
 func (g *Game) Layout(_, _ int) (screenWidth, screenHeight int) {
