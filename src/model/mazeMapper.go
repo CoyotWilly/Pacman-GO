@@ -2,7 +2,6 @@ package model
 
 import (
 	"Pacman/src/enum"
-	"log"
 	"slices"
 	"strings"
 )
@@ -28,10 +27,6 @@ func MazeWithPath2Directions(path string, position MazeCharacter, movesCount int
 	for i := 0; i < movesCount-1; i++ {
 		var filtered []int
 		moves, newPosition := CheckPossiblePaths(position, pathArray)
-
-		if moves == nil {
-			log.Print("asa")
-		}
 
 		if i > 0 && len(moves) > 1 {
 			for _, move := range moves {
